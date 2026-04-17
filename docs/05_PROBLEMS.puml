@@ -12,10 +12,10 @@ skinparam rectangle {
 
 title Keyboard Transparency Monitor - Architectural Problems & Solutions\n\n
 
-rectangle "🔴 CRITICAL DETECTION CHALLENGES" {
+rectangle "CRITICAL DETECTION CHALLENGES" {
     note right
         **PROBLEM 1: Input Device Access Detection**
-        Current: ❌ Cannot directly detect keyboard access
+        Current: Cannot directly detect keyboard access
         Reason: Windows API limitations without kernel driver
         
         Attempted Solutions:
@@ -36,7 +36,7 @@ rectangle "🔴 CRITICAL DETECTION CHALLENGES" {
 
     note right
         **PROBLEM 2: Threading & Qt Signal Issues**
-        Current: ❌ Callbacks from background thread to UI
+        Current: Callbacks from background thread to UI
         Reason: PySide6 requires UI updates from main thread only
         
         Attempted Solutions:
@@ -50,13 +50,13 @@ rectangle "🔴 CRITICAL DETECTION CHALLENGES" {
         
         **Impact:** Missed updates, potential crashes
         
-        **Solution:** ✅ Implemented Qt Signals pattern
+        **Solution:** Implemented Qt Signals pattern
         (thread-safe event dispatch to main loop)
     end note
 
     note right
         **PROBLEM 3: WMIC Deprecation**
-        Current: ❌ WMIC not available on Windows 11+
+        Current: WMIC not available on Windows 11+
         Reason: Microsoft deprecated WMI Command-Line
         
         Attempted Solutions:
@@ -76,7 +76,7 @@ rectangle "🔴 CRITICAL DETECTION CHALLENGES" {
     end note
 }
 
-rectangle "🟡 ARCHITECTURAL CONSTRAINTS" {
+rectangle " ARCHITECTURAL CONSTRAINTS" {
     note right
         **CONSTRAINT 1: Privilege Escalation**
         Issue: Many detections require administrator rights
@@ -87,7 +87,7 @@ rectangle "🟡 ARCHITECTURAL CONSTRAINTS" {
         • Registry access (System hive)
         • File system deep inspection
         
-        Current Status: ❌ Not implemented
+        Current Status: Not implemented
         Workaround: Run as Administrator (manual user action)
         
         **Impact:** Limited detection without admin privileges
@@ -134,7 +134,7 @@ rectangle "🟡 ARCHITECTURAL CONSTRAINTS" {
     end note
 }
 
-rectangle "⚠️ DATA FLOW PROBLEMS" {
+rectangle "DATA FLOW PROBLEMS" {
     note right
         **PROBLEM 4: Callback Registration Timing**
         Issue: Callbacks registered AFTER monitor starts
@@ -146,7 +146,7 @@ rectangle "⚠️ DATA FLOW PROBLEMS" {
         
         Result: First scan missed by UI, no processes visible
         
-        **Status:** ✅ FIXED - Reversed init order
+        **Status:** FIXED - Reversed init order
         (callbacks now registered BEFORE start())
     end note
 
@@ -165,7 +165,7 @@ rectangle "⚠️ DATA FLOW PROBLEMS" {
     end note
 }
 
-rectangle "🎯 DETECTION ACCURACY ISSUES" {
+rectangle "DETECTION ACCURACY ISSUES" {
     note right
         **PROBLEM 6: High False Positive Rate**
         Current detections too simplistic:

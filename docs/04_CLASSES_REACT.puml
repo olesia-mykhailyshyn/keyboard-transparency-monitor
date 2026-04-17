@@ -7,7 +7,7 @@ skinparam arrowColor #1976D2
 
 title Keyboard Transparency Monitor - React Data Models\n\n
 
-package "📊 Core Models" {
+package "Core Models" {
     class MonitoredProcess {
         -id: string
         -name: string
@@ -71,7 +71,7 @@ package "📊 Core Models" {
     AlertEvent --> AlertCategory
 }
 
-package "⚛️ State & Store (Zustand)" {
+package "State & Store (Zustand)" {
     class AppState {
         +appState: "startup"|"normal"|"paranoia"|"sensitive"
         +monitoredProcesses: MonitoredProcess[]
@@ -114,7 +114,7 @@ package "⚛️ State & Store (Zustand)" {
     Store --> Actions
 }
 
-package "🎨 Component Props" {
+package "Component Props" {
     class ProcessListProps {
         -processes: MonitoredProcess[]
         -onProcessSelect: (pid) => void

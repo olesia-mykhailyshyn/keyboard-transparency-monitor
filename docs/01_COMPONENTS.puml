@@ -19,7 +19,7 @@ skinparam note {
 
 title Keyboard Transparency Monitor - Component Architecture (Low-level)\n\n
 
-package "🎨 UI Layer" {
+package "UI Layer" {
     component [CyberpunkMainWindow] as UI_Main #E8F4FF
     component [ProcessTable] as UI_Table #E8F4FF
     component [AlertsPanel] as UI_Alerts #E8F4FF
@@ -29,13 +29,13 @@ package "🎨 UI Layer" {
     component [Dialogs] as UI_Dialogs #E8F4FF
 }
 
-package "⚙️ Application Core" {
+package "Application Core" {
     component [Application\nOrchestrator] as APP #FFE8E8
     component [MonitorService] as MONITOR #FFE8E8
     component [EventLoop\nManager] as LOOP #FFE8E8
 }
 
-package "🔍 Detection Engine" {
+package "Detection Engine" {
     component [RiskEngine] as RISK #E8FFE8
     component [ProcessScanner] as SCANNER #E8FFE8
     component [PlatformAdapter\n(Windows/Linux/macOS)] as PLATFORM #E8FFE8
@@ -44,14 +44,14 @@ package "🔍 Detection Engine" {
     component [DLLAnalyzer] as DLL_ANALYZER #E8FFE8
 }
 
-package "🛠️ Services" {
+package "Services" {
     component [BlocklistService] as BLOCKLIST #F0E8FF
     component [TrustService] as TRUST #F0E8FF
     component [AlertManager] as ALERTS #F0E8FF
     component [UserActionLogger] as ACTION_LOG #F0E8FF
 }
 
-package "💾 Storage Layer" {
+package "Storage Layer" {
     component [SQLiteDatabase] as DB #FFE8F0
     component [DetectionRepository] as REPO_DETECT #FFE8F0
     component [BlocklistRepository] as REPO_BLOCK #FFE8F0
@@ -60,21 +60,21 @@ package "💾 Storage Layer" {
     component [ActionRepository] as REPO_ACTION #FFE8F0
 }
 
-package "📊 Data Models" {
+package "Data Models" {
     component [ProcessMetadata] as MODEL_PROC #E8F0FF
     component [RiskAssessment] as MODEL_RISK #E8F0FF
     component [Alert] as MODEL_ALERT #E8F0FF
     component [UserAction] as MODEL_ACTION #E8F0FF
 }
 
-package "🔧 Utilities" {
+package "Utilities" {
     component [ProcessFormatter] as UTIL_FORMAT #FFF8E8
     component [FileAnalyzer] as UTIL_FILE #FFF8E8
     component [SignatureChecker] as UTIL_SIG #FFF8E8
     component [PathValidator] as UTIL_PATH #FFF8E8
 }
 
-package "🖥️ System Integration" {
+package "System Integration" {
     component [WMIC Handler] as SYS_WMIC #E8E8E8
     component [ETW Interface] as SYS_ETW #E8E8E8
     component [Registry Reader] as SYS_REG #E8E8E8

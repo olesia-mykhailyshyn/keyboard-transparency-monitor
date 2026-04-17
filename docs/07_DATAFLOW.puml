@@ -1,14 +1,14 @@
 @startuml KTM_DataFlow
 !theme plain
 skinparam backgroundColor #FFFFFF
-skinparam process {
-    BackgroundColor #E8FFE8
-    BorderColor #00AA00
-    FontColor #000000
-}
-skinparam database {
+skinparam storage {
     BackgroundColor #FFF8E8
     BorderColor #FF9900
+    FontColor #000000
+}
+skinparam rectangle {
+    BackgroundColor #E8FFE8
+    BorderColor #00AA00
     FontColor #000000
 }
 skinparam note {
@@ -20,103 +20,102 @@ skinparam note {
 title Keyboard Transparency Monitor - Data Flow Diagram\n\n
 
 ' Data sources
-datastore "📋 System\nProcesses" as SYS_PROC
-datastore "📁 File\nSystem" as FILE_SYS
-datastore "🔐 Registry\n(Windows)" as REGISTRY
-datastore "⚙️ System\nApis" as SYS_API
+storage "System\nProcesses" as SYS_PROC
+storage "File\nSystem" as FILE_SYS
+storage "Registry\n(Windows)" as REGISTRY
+storage "System\nApis" as SYS_API
 
 ' Processing
-process "1️⃣ SCAN\nProcesses" as SCAN #E8FFE8
-process "2️⃣ COLLECT\nMetadata" as COLLECT #E8FFE8
-process "3️⃣ FILTER\nTrusted" as FILTER #E8FFE8
-process "4️⃣ ANALYZE\nRisk" as ANALYZE #E8FFE8
-process "5️⃣ SCORE\nCalculate" as SCORE #E8FFE8
-process "6️⃣ GENERATE\nAlerts" as GENALERT #E8FFE8
+rectangle "SCAN\nProcesses" as SCAN
+rectangle "COLLECT\nMetadata" as COLLECT
+rectangle "FILTER\nTrusted" as FILTER
+rectangle "ANALYZE\nRisk" as ANALYZE
+rectangle "SCORE\nCalculate" as SCORE
+rectangle "GENERATE\nAlerts" as GENALERT
 
 ' Storage
-datastore "💾 SQLite\nDatabase" as DB #FFF8E8
+storage "SQLite\nDatabase" as DB
 
 ' Output
-process "7️⃣ UPDATE\nUI" as UPDATE #E8FFE8
-datastore "🖥️ UI\nDisplay" as UI_OUT
+rectangle "UPDATE\nUI" as UPDATE
+storage "UI\nDisplay" as UI_OUT
 
 ' User actions
-process "8️⃣ LOG\nActions" as LOG #E8FFE8
-process "9️⃣ EXPORT\nReports" as EXPORT #E8FFE8
+rectangle "LOG\nActions" as LOG
+rectangle "EXPORT\nReports" as EXPORT
 
 note right of SYS_PROC
-    Running process list
-    (every 5 seconds)
+  Running process list
+  (every 5 seconds)
 end note
 
 note right of COLLECT
-    Extract: PID, name,
-    path, cmdline, memory,
-    privileges, timestamps
+  Extract: PID, name,
+  path, cmdline, memory,
+  privileges, timestamps
 end note
 
 note right of FILTER
-    Check whitelist
-    Skip trusted procs
+  Check whitelist
+  Skip trusted procs
 end note
 
 note right of ANALYZE
-    10-signal detection:
-    keyboard indicators,
-    paths, signatures,
-    privileges, etc.
+  10-signal detection:
+  keyboard indicators,
+  paths, signatures,
+  privileges, etc.
 end note
 
 note right of SCORE
-    Weighted scoring
-    (0-100 scale)
-    Risk level assignment
+  Weighted scoring
+  (0-100 scale)
+  Risk level assignment
 end note
 
 note right of GENALERT
-    High risk (70+)
-    → Generate alert
-    Store in DB
+  High risk (70+)
+  Generate alert
+  Store in DB
 end note
 
 note right of DB
-    8 tables:
-    processes, detections,
-    alerts, blocklist,
-    whitelist, actions,
-    statistics, system_info
+  8 tables:
+  processes, detections,
+  alerts, blocklist,
+  whitelist, actions,
+  statistics, system_info
 end note
 
 note right of UPDATE
-    Thread-safe signal
-    to main UI loop
-    Update tables/timeline
+  Thread-safe signal
+  to main UI loop
+  Update tables/timeline
 end note
 
 note right of LOG
-    User actions:
-    block, trust, export
-    All timestamped
+  User actions:
+  block, trust, export
+  All timestamped
 end note
 
-' Flows
-SYS_PROC --> SCAN : list
-SYS_API --> SCAN : query
-FILE_SYS --> COLLECT : inspect
-REGISTRY --> COLLECT : check signature
-SCAN --> COLLECT : processes
-COLLECT --> FILTER : metadata
-DB --> FILTER : whitelist
-FILTER --> ANALYZE : new processes
-ANALYZE --> SCORE : signals detected
-SCORE --> GENALERT : risk_score
-GENALERT --> DB : store alert
-GENALERT --> UPDATE : emit signal
-DB --> UPDATE : load data
-UPDATE --> UI_OUT : display
-UI_OUT --> LOG : user action
-LOG --> DB : log action
-DB --> EXPORT : query reports
-EXPORT --> UI_OUT : download
+SYS_PROC --> SCAN
+SYS_API --> SCAN
+FILE_SYS --> COLLECT
+REGISTRY --> COLLECT
+SCAN --> COLLECT
+COLLECT --> FILTER
+DB --> FILTER
+FILTER --> ANALYZE
+ANALYZE --> SCORE
+SCORE --> GENALERT
+GENALERT --> DB
+GENALERT --> UPDATE
+DB --> UPDATE
+UPDATE --> UI_OUT
+UI_OUT --> LOG
+LOG --> DB
+DB --> EXPORT
+EXPORT --> UI_OUT
 
 @enduml

@@ -13,11 +13,11 @@ skinparam package {
 
 title Keyboard Transparency Monitor - React Architecture\n\n
 
-package "⚛️ UI Layer (React Components)" {
+package "UI Layer (React Components)" {
     component [App.tsx] as MAIN #E3F2FD
     component [Dashboard] as DASH #E3F2FD
     
-    package "🔀 Views" {
+    package "Views" {
         component [ProcessesView] as V1
         component [PerformanceView] as V2
         component [KeyboardView] as V3
@@ -25,7 +25,7 @@ package "⚛️ UI Layer (React Components)" {
         component [SettingsView] as V5
     }
     
-    package "🎨 Components" {
+    package "Components" {
         component [ProcessTable] as C1
         component [StatusCard] as C2
         component [RiskBadge] as C3
@@ -34,20 +34,20 @@ package "⚛️ UI Layer (React Components)" {
     }
 }
 
-package "🏪 State Management (Zustand)" {
+package "State Management (Zustand)" {
     component [useStore Hook] as STORE #FFF3E0
     component [AppState] as STATE #FFF3E0
     component [Reducer] as RED #FFF3E0
     component [Actions] as ACT #FFF3E0
 }
 
-package "🔍 Backend Service API" {
+package "Backend Service API" {
     component [MonitorAPI] as API #E8F5E9
     component [RiskEngine] as RISK #E8F5E9
     component [ProcessScanner] as SCAN #E8F5E9
 }
 
-package "💾 Data Models" {
+package "Data Models" {
     component [MonitoredProcess] as M1 #F3E5F5
     component [AlertEvent] as M2 #F3E5F5
     component [RiskSignal] as M3 #F3E5F5

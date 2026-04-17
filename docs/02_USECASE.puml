@@ -23,7 +23,7 @@ actor User as USER #E8F4FF
 actor Administrator as ADMIN #FFE8E8
 actor System as SYSTEM #E8FFE8
 
-rectangle "🎯 Keyboard Transparency Monitor" {
+rectangle "Keyboard Transparency Monitor" {
     usecase "Start Monitoring" as UC1 #E8FFE8
     usecase "View Running Processes" as UC2 #E8FFE8
     usecase "Analyze Process Risk" as UC3 #FFE8F0

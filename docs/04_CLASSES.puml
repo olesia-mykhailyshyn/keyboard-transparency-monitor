@@ -13,7 +13,7 @@ skinparam note {
 
 title Keyboard Transparency Monitor - Class Architecture\n\n
 
-package "📊 Data Models" {
+package "Data Models" {
     class ProcessMetadata {
         -pid: int
         -name: str
@@ -74,7 +74,7 @@ package "📊 Data Models" {
     Alert --> AlertSeverity
 }
 
-package "🔍 Detection Engine" {
+package "Detection Engine" {
     class RiskEngine #E8FFE8 {
         -platform: str
         -blocked_processes: Set[str]
@@ -119,7 +119,7 @@ package "🔍 Detection Engine" {
     RiskEngine --> RiskAssessment
 }
 
-package "🛠️ Services" {
+package "Services" {
     class MonitorService #FFE8E8 {
         -scanner: ProcessScanner
         -risk_engine: RiskEngine
@@ -181,7 +181,7 @@ package "🛠️ Services" {
     UserActionLogger --> UserAction
 }
 
-package "💾 Storage Layer" {
+package "Storage Layer" {
     class Database #FFF8E8 {
         -connection: sqlite3.Connection
         --
@@ -214,7 +214,7 @@ package "💾 Storage Layer" {
     Database --> Repository
 }
 
-package "🎨 UI Layer" {
+package "UI Layer" {
     class CyberpunkMainWindow #F0E8FF {
         -app_context: Application
         -process_table: QTableWidget
