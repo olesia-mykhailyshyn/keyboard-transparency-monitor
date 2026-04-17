@@ -1,0 +1,232 @@
+@startuml KTM_ClassDiagram
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam classBackgroundColor #E8F4FF
+skinparam classBorderColor #0066CC
+skinparam classArrowColor #0066CC
+skinparam arrowColor #0066CC
+skinparam note {
+    BackgroundColor #FFFFCC
+    BorderColor #FF6600
+    FontColor #000000
+}
+
+title Keyboard Transparency Monitor - Class Architecture\n\n
+
+package "📊 Data Models" {
+    class ProcessMetadata {
+        -pid: int
+        -name: str
+        -executable: str
+        -cmdline: str
+        -create_time: float
+        -memory_info: MemoryInfo
+        --
+        +get_hash(): str
+        +is_system_process(): bool
+    }
+
+    class RiskAssessment {
+        -pid: int
+        -process_name: str
+        -risk_level: RiskLevel
+        -risk_score: float (0-100)
+        -detected_signals: List[str]
+        -keyboard_related_indicators: List[str]
+        --
+        +to_json(): dict
+    }
+
+    class Alert {
+        -alert_id: str
+        -process_name: str
+        -severity: AlertSeverity
+        -title: str
+        -timestamp: datetime
+        -details: dict
+        --
+        +serialize(): str
+    }
+
+    class UserAction {
+        -action_id: str
+        -action_type: ActionType
+        -process_name: str
+        -timestamp: datetime
+        --
+        +log(): None
+    }
+
+    enum RiskLevel {
+        LOW
+        MEDIUM
+        HIGH
+        CRITICAL
+    }
+
+    enum AlertSeverity {
+        INFO
+        WARNING
+        CRITICAL
+    }
+
+    RiskAssessment --> RiskLevel
+    Alert --> AlertSeverity
+}
+
+package "🔍 Detection Engine" {
+    class RiskEngine #E8FFE8 {
+        -platform: str
+        -blocked_processes: Set[str]
+        -trusted_processes: Set[str]
+        --
+        +analyze(process): RiskAssessment
+        -_check_input_device_access(): Tuple
+        -_check_suspicious_path(): int
+        -_check_suspicious_name(): int
+        -_check_unsigned_executable(): int
+        -_calculate_risk_score(): float
+    }
+
+    class ProcessScanner #E8FFE8 {
+        -include_system: bool
+        --
+        +scan_all_processes(): List
+        +scan_by_name(name): List
+        +scan_by_pid(pid): ProcessMetadata
+        -_collect_process_metadata(): ProcessMetadata
+    }
+
+    abstract class PlatformAdapter #F0E8FF {
+        {abstract} +get_platform_name(): str
+        {abstract} +supports_keyboard_detection(): bool
+        {abstract} +check_keyboard_access(): bool
+        {abstract} +terminate_process(): bool
+    }
+
+    class WindowsAdapter #F0E8FF {
+        -_elevated: bool
+        --
+        +check_keyboard_access(pid): bool
+        +_detect_keyboard_indicators(): List
+        +get_process_handle_count(): int
+        +terminate_process(pid): bool
+    }
+
+    RiskEngine --> PlatformAdapter
+    ProcessScanner --> ProcessMetadata
+    ProcessMetadata --> RiskEngine
+    RiskEngine --> RiskAssessment
+}
+
+package "🛠️ Services" {
+    class MonitorService #FFE8E8 {
+        -scanner: ProcessScanner
+        -risk_engine: RiskEngine
+        -scan_interval: float
+        -_running: bool
+        -_monitor_thread: Thread
+        --
+        +start(): bool
+        +stop(): bool
+        +pause(): None
+        +resume(): None
+        +register_on_process_detected(): None
+        -_monitor_loop(): None
+        -_perform_scan(): None
+    }
+
+    class BlocklistService #FFE8E8 {
+        -repository: BlocklistRepository
+        -blocked_processes: Set[str]
+        --
+        +is_blocked(process): bool
+        +add_to_blocklist(process): None
+        +remove_from_blocklist(process): None
+        +record_relaunch_attempt(): int
+    }
+
+    class TrustService #FFE8E8 {
+        -repository: TrustlistRepository
+        -trusted_processes: Set[str]
+        --
+        +is_trusted(process): bool
+        +add_to_trustlist(process): None
+    }
+
+    class AlertManager #FFE8E8 {
+        -repository: AlertRepository
+        -alerts: List[Alert]
+        --
+        +create_alert(): Alert
+        +log_alert(alert): None
+        +get_recent_alerts(): List
+    }
+
+    class UserActionLogger #FFE8E8 {
+        -repository: ActionRepository
+        --
+        +log_action(action): None
+        +get_action_history(): List
+        +export_actions(): str
+    }
+
+    MonitorService --> ProcessScanner
+    MonitorService --> RiskEngine
+    MonitorService --> BlocklistService
+    MonitorService --> TrustService
+    MonitorService --> AlertManager
+    BlocklistService --> Alert
+    AlertManager --> Alert
+    UserActionLogger --> UserAction
+}
+
+package "💾 Storage Layer" {
+    class Database #FFF8E8 {
+        -connection: sqlite3.Connection
+        --
+        +initialize(): None
+        +get_connection(): Connection
+        +close(): None
+    }
+
+    abstract class Repository #FFF8E8 {
+        -db: Database
+        --
+        {abstract} +create(): None
+        {abstract} +read(): None
+        {abstract} +update(): None
+        {abstract} +delete(): None
+    }
+
+    class DetectionRepository #FFF8E8
+    class BlocklistRepository #FFF8E8
+    class TrustlistRepository #FFF8E8
+    class AlertRepository #FFF8E8
+    class ActionRepository #FFF8E8
+
+    Repository <|-- DetectionRepository
+    Repository <|-- BlocklistRepository
+    Repository <|-- TrustlistRepository
+    Repository <|-- AlertRepository
+    Repository <|-- ActionRepository
+
+    Database --> Repository
+}
+
+package "🎨 UI Layer" {
+    class CyberpunkMainWindow #F0E8FF {
+        -app_context: Application
+        -process_table: QTableWidget
+        -timeline_table: QTableWidget
+        --
+        +toggle_scan(): None
+        +refresh_scan(): None
+        +on_process_detected(): None
+        +on_alert_generated(): None
+    }
+
+    CyberpunkMainWindow --> MonitorService
+}
+
+@enduml

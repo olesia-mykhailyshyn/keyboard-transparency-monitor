@@ -1,0 +1,212 @@
+@startuml KTM_Problems_Constraints
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam noteBackgroundColor #FFE8E8
+skinparam noteBorderColor #CC0000
+skinparam noteFontColor #000000
+skinparam rectangle {
+    BackgroundColor #F0F0F0
+    BorderColor #333333
+    FontColor #000000
+}
+
+title Keyboard Transparency Monitor - Architectural Problems & Solutions\n\n
+
+rectangle "🔴 CRITICAL DETECTION CHALLENGES" {
+    note right
+        **PROBLEM 1: Input Device Access Detection**
+        Current: ❌ Cannot directly detect keyboard access
+        Reason: Windows API limitations without kernel driver
+        
+        Attempted Solutions:
+        • WMIC process inspection (deprecated API)
+        • Handle.exe analysis (requires Sysinternals)
+        • ETW tracing (complex, poorly documented)
+        
+        Root Cause:
+        Windows deliberately restricts input device access
+        to unprivileged user-mode processes for security
+        
+        **Impact:** Real-time keyboard monitoring limited
+        to heuristic analysis (process names, paths)
+        
+        **Solution:** Kernel-mode driver required
+        (like commercial antivirus software)
+    end note
+
+    note right
+        **PROBLEM 2: Threading & Qt Signal Issues**
+        Current: ❌ Callbacks from background thread to UI
+        Reason: PySide6 requires UI updates from main thread only
+        
+        Attempted Solutions:
+        • Direct callback passing → crashes (race condition)
+        • Qt Signals → works but overhead
+        • Thread-safe queue → not implemented
+        
+        Root Cause:
+        MonitorService runs in background thread,
+        but PySide6 widgets must be updated from main thread
+        
+        **Impact:** Missed updates, potential crashes
+        
+        **Solution:** ✅ Implemented Qt Signals pattern
+        (thread-safe event dispatch to main loop)
+    end note
+
+    note right
+        **PROBLEM 3: WMIC Deprecation**
+        Current: ❌ WMIC not available on Windows 11+
+        Reason: Microsoft deprecated WMI Command-Line
+        
+        Attempted Solutions:
+        • PowerShell Get-Process (slower)
+        • WMI COM objects (complex, verbose)
+        • psutil only (limited handle info)
+        
+        Root Cause:
+        No standardized process inspection API on modern Windows
+        Microsoft phasing out old WMI CLI tools
+        
+        **Impact:** Cannot reliably get handle counts
+        Performance degradation on newer Windows
+        
+        **Solution:** Switch to PowerShell WMI or
+        implement Windows Driver Kit solution
+    end note
+}
+
+rectangle "🟡 ARCHITECTURAL CONSTRAINTS" {
+    note right
+        **CONSTRAINT 1: Privilege Escalation**
+        Issue: Many detections require administrator rights
+        
+        Required for:
+        • Process handle inspection
+        • Digital signature validation
+        • Registry access (System hive)
+        • File system deep inspection
+        
+        Current Status: ❌ Not implemented
+        Workaround: Run as Administrator (manual user action)
+        
+        **Impact:** Limited detection without admin privileges
+    end note
+
+    note right
+        **CONSTRAINT 2: Performance**
+        Issue: Scanning 300+ processes takes significant time
+        
+        Bottlenecks:
+        • WMIC queries (2-3 sec per scan)
+        • Risk analysis per-process (overhead)
+        • Database writes (I/O bound, SQLite locking)
+        • Network I/O for signature validation
+        
+        Current: 5 sec scan interval
+        Needed: 1 sec for true real-time response
+        
+        **Solution:** Incremental scanning, async queries,
+        caching, connection pooling (not implemented)
+    end note
+
+    note right
+        **CONSTRAINT 3: Cross-Platform Complexity**
+        Issue: Different OS = different APIs and limitations
+        
+        Windows:
+        • WMIC/PowerShell/WMI (deprecated)
+        • Registry inspection (complex)
+        • Digital signatures (code signing)
+        
+        Linux:
+        • /proc filesystem parsing (simple)
+        • /sys inspection (kernel info)
+        • strace/ptrace (limited, slow)
+        
+        macOS:
+        • lsof analysis (file handles)
+        • IOKit inspection (hardware)
+        • Sandbox restrictions (App Store)
+        
+        Current: Only Windows partially implemented
+        **Impact:** Code bloat, maintenance overhead
+    end note
+}
+
+rectangle "⚠️ DATA FLOW PROBLEMS" {
+    note right
+        **PROBLEM 4: Callback Registration Timing**
+        Issue: Callbacks registered AFTER monitor starts
+        
+        Timeline Bug:
+        1. MonitorService.start() ← scan begins IMMEDIATELY
+        2. register_callback() ← UI subscribes NOW
+        3. process_detected() ← but first scan already done!
+        
+        Result: First scan missed by UI, no processes visible
+        
+        **Status:** ✅ FIXED - Reversed init order
+        (callbacks now registered BEFORE start())
+    end note
+
+    note right
+        **PROBLEM 5: Database Contention**
+        Issue: Background thread writes to SQLite
+        SQLite limitation: Single-threaded by default
+        
+        Result: Lock contention, slow queries
+        Frequent: "database is locked" errors
+        
+        Current Workaround: WAL mode enabled (partial)
+        Better Solution: Connection pooling (not implemented)
+        
+        **Impact:** Occasional database access delays
+    end note
+}
+
+rectangle "🎯 DETECTION ACCURACY ISSUES" {
+    note right
+        **PROBLEM 6: High False Positive Rate**
+        Current detections too simplistic:
+        
+        • Process names: "keylog" → too specific
+        • Paths: "%TEMP%" → many legitimate apps use it
+        • Handle count: >500 → many system procs hit this
+        • Unsigned: Many Windows apps are unsigned
+        
+        Result: Most system processes = low risk
+        True threats: Indistinguishable from noise
+        
+        Better Approach:
+        • Behavioral analysis (relaunch patterns)
+        • Network anomalies (C&C communication)
+        • System call tracing (very slow)
+        • ML classification (requires training data)
+        
+        **Impact:** Cannot reliably detect advanced threats
+    end note
+
+    note right
+        **PROBLEM 7: Evasion Techniques Not Detected**
+        Current detection scope is limited:
+        
+        NOT detected:
+        • Process spoofing (fake name like svchost.exe)
+        • DLL injection (loaded from parent process)
+        • Registry injection (runs before detection)
+        • Kernel mode rootkits (below userspace)
+        • Code caves (code injection into existing proc)
+        • Privilege escalation exploits
+        
+        Requires:
+        • Kernel driver (highest privilege level)
+        • Real-time system call hooking
+        • Memory scanning & analysis
+        • Behavior prediction ML model
+        
+        **Impact:** Advanced threats may bypass detection
+    end note
+}
+
+@enduml

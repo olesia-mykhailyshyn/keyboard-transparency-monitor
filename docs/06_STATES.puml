@@ -1,0 +1,176 @@
+@startuml KTM_StateDiagram
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam state {
+    BackgroundColor #E8FFE8
+    BorderColor #00AA00
+    FontColor #000000
+}
+skinparam stateBorder {
+    Type Bold
+}
+skinparam note {
+    BackgroundColor #FFFFCC
+    BorderColor #FF6600
+    FontColor #000000
+}
+
+title Keyboard Transparency Monitor - Monitoring State Machine\n\n
+
+[*] --> IDLE
+
+state IDLE #F0F0F0 {
+    note right
+        ⚫ No scanning active
+        ⚫ No processes monitored
+        ⚫ UI button: "START SCAN"
+        ⚫ Database: Not updated
+    end note
+}
+
+state SCANNING #E8FFE8 {
+    note right
+        🟢 MonitorService running
+        🟢 Periodic process scans (5s)
+        🟢 Risk analysis ongoing
+        🟢 UI updating in real-time
+        🟢 Database writing alerts
+    end note
+}
+
+state PAUSED #FFE8E8 {
+    note right
+        🟡 Service still running
+        🟡 Scans temporarily stopped
+        🟡 Previous detections retained
+        🟡 Can resume quickly
+        🟡 No new processes analyzed
+    end note
+}
+
+state BLOCKED_DETECTED #FFE8F0 {
+    note right
+        🔴 Process identified as HIGH RISK
+        🔴 Risk score: 70-84%
+        🔴 User can BLOCK or TRUST
+        🔴 Alert dialog shown
+        🔴 Relaunch tracking enabled
+    end note
+}
+
+state CRITICAL_DETECTED #CC0000 {
+    note right
+        ❌ Process identified as CRITICAL THREAT
+        ❌ Risk score: 85-100%
+        ❌ Immediate alert generated
+        ❌ Recommendation: BLOCK NOW
+        ❌ Possible auto-termination
+    end note
+}
+
+state PROCESS_BLOCKED #FFE8E8 {
+    note right
+        🚫 Process added to blacklist
+        🚫 Detection recorded in DB
+        🚫 Relaunch monitoring enabled
+        🚫 Timeline event created
+        🚫 User action logged
+    end note
+}
+
+state PROCESS_TRUSTED #E8FFE8 {
+    note right
+        ✅ Process marked as safe
+        ✅ Removed from risk analysis
+        ✅ Won't trigger alerts
+        ✅ Added to whitelist
+        ✅ Future instances skipped
+    end note
+}
+
+state ALERT_GENERATED #FFE8E8 {
+    note right
+        📢 High-risk process found
+        📢 Alert in timeline view
+        📢 User notification ready
+        📢 Can export/review details
+        📢 Timestamped in database
+    end note
+}
+
+state RELAUNCH_DETECTED #CC0000 {
+    note right
+        ⚠️ Blocked process relaunched
+        ⚠️ CRITICAL risk score: 100%
+        ⚠️ Immediate critical alert
+        ⚠️ Recommendation: re-block
+        ⚠️ Escalation event created
+    end note
+}
+
+' Main flow transitions
+IDLE --> SCANNING : user clicks "START SCAN"\n[toggle_scan()]
+
+SCANNING --> PAUSED : user clicks "PAUSE"\n[monitor.pause()]
+
+PAUSED --> SCANNING : user clicks "RESUME"\n[monitor.resume()]
+
+SCANNING --> IDLE : user clicks "STOP"\n[monitor.stop()]
+
+' Detection flows - High Risk
+SCANNING --> BLOCKED_DETECTED : process risk >= 70%\n[show_risk_dialog()]
+
+BLOCKED_DETECTED --> PROCESS_BLOCKED : user clicks "BLOCK"\n[add_to_blocklist()]
+
+BLOCKED_DETECTED --> PROCESS_TRUSTED : user clicks "TRUST"\n[add_to_trustlist()]
+
+BLOCKED_DETECTED --> SCANNING : dismissed by user
+
+' Detection flows - Critical
+SCANNING --> CRITICAL_DETECTED : process risk >= 85%\n[show_critical_alert()]
+
+CRITICAL_DETECTED --> PROCESS_BLOCKED : user confirms block\n[add_to_blocklist()]
+
+CRITICAL_DETECTED --> ALERT_GENERATED : alert only
+
+' Alert generation
+SCANNING --> ALERT_GENERATED : any risk >= 70%\n[log_alert()]
+
+ALERT_GENERATED --> SCANNING : acknowledged
+
+' Relaunch detection
+PROCESS_BLOCKED --> SCANNING : process not running
+
+SCANNING --> RELAUNCH_DETECTED : blocked proc relaunch\n[relaunch_count++]
+
+RELAUNCH_DETECTED --> ALERT_GENERATED : critical alert\n[score = 100%]
+
+RELAUNCH_DETECTED --> PROCESS_BLOCKED : terminate + re-block
+
+' Trusted process
+PROCESS_TRUSTED --> SCANNING : process runs\n[skip analysis]
+
+' Cleanup and shutdown
+SCANNING --> IDLE : app closing\n[monitor.stop()]
+
+PAUSED --> IDLE : app closing\n[monitor.stop()]
+
+BLOCKED_DETECTED --> IDLE : app closing
+
+ALERT_GENERATED --> IDLE : app closing
+
+note bottom of [*]
+    Application starts
+    All services initialized
+    Database opened
+    Scan disabled by default
+end note
+
+note bottom of SCANNING
+    Primary operational state
+    Continuous 5-second scan cycle
+    Process detection & analysis
+    Alert generation & logging
+end note
+
+@enduml

@@ -1,0 +1,107 @@
+@startuml KTM_React_Sequence
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam sequence {
+    ArrowColor #1976D2
+    LifeLineBackgroundColor #E3F2FD
+    LifeLineBorderColor #1976D2
+    ActorBackgroundColor #F5F5F5
+    ActorBorderColor #424242
+}
+
+title Keyboard Transparency Monitor - React User Interaction Flow\n\n
+
+actor User
+participant "App.tsx\n(Router)" as APP
+participant "Dashboard\n(Container)" as DASH
+participant "ProcessesView" as VIEW
+participant "useStore\n(Zustand)" as STORE
+participant "Backend API" as API
+participant "Database" as DB
+
+User -> APP: Open Application
+activate APP
+
+APP -> STORE: useStore()
+activate STORE
+STORE --> APP: AppState + Actions
+deactivate STORE
+
+APP -> DASH: Render
+activate DASH
+
+DASH -> VIEW: Render ProcessesView
+activate VIEW
+
+User -> VIEW: Click "Scan" Button
+note right of USER
+    User initiates monitoring
+end note
+
+VIEW -> STORE: dispatch(SCAN_START)
+activate STORE
+note right of STORE
+    Update: scanning = true
+    Set: refreshInterval = 5s
+end note
+
+loop Every 5 seconds
+    STORE -> API: GET /api/scan
+    activate API
+    
+    API -> DB: Query processes
+    activate DB
+    DB --> API: processes[]
+    deactivate DB
+    
+    API -> API: Analyze risk (10 signals)
+    note right of API
+        Calculate risk scores
+        Generate alerts if needed
+    end note
+    
+    API --> STORE: {processes[], alerts[]}
+    deactivate API
+    
+    STORE -> STORE: setState(PROCESS_DETECTED)
+    note right of STORE
+        Update monitoredProcesses
+        Update alerts
+        Recalculate systemScore
+    end note
+    
+    VIEW -> VIEW: Re-render table
+    note right of VIEW
+        Show new processes
+        Highlight suspicious ones
+        Update risk badges
+    end note
+end
+
+User -> VIEW: Select Process
+VIEW -> STORE: dispatch(SELECT_PROCESS)
+activate STORE
+STORE --> STORE: Update selectedProcess
+deactivate STORE
+
+VIEW -> VIEW: Show Details Panel
+note right of VIEW
+    Display process info
+    Show risk analysis
+    Show action buttons
+end note
+
+User -> VIEW: Click "Block"
+VIEW -> STORE: dispatch(PROCESS_BLOCKED)
+activate STORE
+STORE -> API: POST /api/block
+API -> DB: Add to blocklist
+STORE --> STORE: Update state
+deactivate STORE
+
+USER --> VIEW: Alert shown + process marked
+deactivate VIEW
+deactivate DASH
+deactivate APP
+
+@enduml

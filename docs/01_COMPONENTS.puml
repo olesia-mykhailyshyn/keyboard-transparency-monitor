@@ -1,0 +1,145 @@
+@startuml KTM_Component_Architecture
+!theme plain
+skinparam componentStyle rectangle
+skinparam backgroundColor #FFFFFF
+skinparam component {
+    BackgroundColor #E8F4F8
+    BorderColor #0066CC
+    FontColor #000000
+}
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #333333
+    FontColor #000000
+}
+skinparam note {
+    BackgroundColor #FFFFCC
+    BorderColor #FF6600
+}
+
+title Keyboard Transparency Monitor - Component Architecture (Low-level)\n\n
+
+package "🎨 UI Layer" {
+    component [CyberpunkMainWindow] as UI_Main #E8F4FF
+    component [ProcessTable] as UI_Table #E8F4FF
+    component [AlertsPanel] as UI_Alerts #E8F4FF
+    component [DetailsPanel] as UI_Details #E8F4FF
+    component [DashboardView] as UI_Dashboard #E8F4FF
+    component [SettingsView] as UI_Settings #E8F4FF
+    component [Dialogs] as UI_Dialogs #E8F4FF
+}
+
+package "⚙️ Application Core" {
+    component [Application\nOrchestrator] as APP #FFE8E8
+    component [MonitorService] as MONITOR #FFE8E8
+    component [EventLoop\nManager] as LOOP #FFE8E8
+}
+
+package "🔍 Detection Engine" {
+    component [RiskEngine] as RISK #E8FFE8
+    component [ProcessScanner] as SCANNER #E8FFE8
+    component [PlatformAdapter\n(Windows/Linux/macOS)] as PLATFORM #E8FFE8
+    component [WindowsAdapter] as WIN_ADAPTER #E8FFE8
+    component [SignatureValidator] as SIG_VALIDATOR #E8FFE8
+    component [DLLAnalyzer] as DLL_ANALYZER #E8FFE8
+}
+
+package "🛠️ Services" {
+    component [BlocklistService] as BLOCKLIST #F0E8FF
+    component [TrustService] as TRUST #F0E8FF
+    component [AlertManager] as ALERTS #F0E8FF
+    component [UserActionLogger] as ACTION_LOG #F0E8FF
+}
+
+package "💾 Storage Layer" {
+    component [SQLiteDatabase] as DB #FFE8F0
+    component [DetectionRepository] as REPO_DETECT #FFE8F0
+    component [BlocklistRepository] as REPO_BLOCK #FFE8F0
+    component [TrustlistRepository] as REPO_TRUST #FFE8F0
+    component [AlertRepository] as REPO_ALERT #FFE8F0
+    component [ActionRepository] as REPO_ACTION #FFE8F0
+}
+
+package "📊 Data Models" {
+    component [ProcessMetadata] as MODEL_PROC #E8F0FF
+    component [RiskAssessment] as MODEL_RISK #E8F0FF
+    component [Alert] as MODEL_ALERT #E8F0FF
+    component [UserAction] as MODEL_ACTION #E8F0FF
+}
+
+package "🔧 Utilities" {
+    component [ProcessFormatter] as UTIL_FORMAT #FFF8E8
+    component [FileAnalyzer] as UTIL_FILE #FFF8E8
+    component [SignatureChecker] as UTIL_SIG #FFF8E8
+    component [PathValidator] as UTIL_PATH #FFF8E8
+}
+
+package "🖥️ System Integration" {
+    component [WMIC Handler] as SYS_WMIC #E8E8E8
+    component [ETW Interface] as SYS_ETW #E8E8E8
+    component [Registry Reader] as SYS_REG #E8E8E8
+    component [FileSystem Monitor] as SYS_FS #E8E8E8
+}
+
+' UI connections
+UI_Main --> UI_Table : uses
+UI_Main --> UI_Alerts : uses
+UI_Main --> UI_Details : uses
+UI_Main --> UI_Dashboard : uses
+UI_Main --> UI_Dialogs : shows
+UI_Main --> UI_Settings : configures
+
+' Application connections
+APP --> MONITOR : manages
+APP --> UI_Main : creates
+APP --> RISK : uses
+APP --> SCANNER : uses
+APP --> BLOCKLIST : accesses
+APP --> TRUST : accesses
+APP --> ALERTS : triggers
+
+' Monitor -> Services
+MONITOR --> RISK : analyzes
+MONITOR --> SCANNER : scans
+MONITOR --> BLOCKLIST : checks
+MONITOR --> TRUST : checks
+MONITOR --> ALERTS : generates
+MONITOR --> ACTION_LOG : logs
+
+' Risk Engine -> Detection
+RISK --> PLATFORM : uses
+RISK --> WIN_ADAPTER : adapts
+RISK --> SIG_VALIDATOR : validates
+RISK --> DLL_ANALYZER : analyzes
+RISK --> MODEL_RISK : returns
+
+' Scanner -> System
+SCANNER --> SYS_WMIC : queries
+SCANNER --> SYS_REG : reads
+SCANNER --> SYS_FS : inspects
+SCANNER --> MODEL_PROC : returns
+
+' Services -> Storage
+BLOCKLIST --> DB : stores
+TRUST --> DB : stores
+ALERTS --> DB : stores
+ACTION_LOG --> DB : stores
+
+' Repositories
+DB --> REPO_DETECT : uses
+DB --> REPO_BLOCK : uses
+DB --> REPO_TRUST : uses
+DB --> REPO_ALERT : uses
+DB --> REPO_ACTION : uses
+
+' UI -> Models
+UI_Table --> MODEL_PROC : displays
+UI_Details --> MODEL_RISK : shows
+UI_Alerts --> MODEL_ALERT : shows
+
+' Utilities
+UTIL_FORMAT -.-> MODEL_PROC : formats
+UTIL_FILE -.-> SYS_FS : analyzes
+UTIL_SIG -.-> SIG_VALIDATOR : checks
+
+@enduml

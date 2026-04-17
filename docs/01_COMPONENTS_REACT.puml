@@ -1,0 +1,85 @@
+@startuml KTM_React_Components
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam component {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #000000
+}
+skinparam package {
+    BackgroundColor #F5F5F5
+    BorderColor #424242
+}
+
+title Keyboard Transparency Monitor - React Architecture\n\n
+
+package "⚛️ UI Layer (React Components)" {
+    component [App.tsx] as MAIN #E3F2FD
+    component [Dashboard] as DASH #E3F2FD
+    
+    package "🔀 Views" {
+        component [ProcessesView] as V1
+        component [PerformanceView] as V2
+        component [KeyboardView] as V3
+        component [AlertsView] as V4
+        component [SettingsView] as V5
+    }
+    
+    package "🎨 Components" {
+        component [ProcessTable] as C1
+        component [StatusCard] as C2
+        component [RiskBadge] as C3
+        component [LineChart] as C4
+        component [AlertTimeline] as C5
+    }
+}
+
+package "🏪 State Management (Zustand)" {
+    component [useStore Hook] as STORE #FFF3E0
+    component [AppState] as STATE #FFF3E0
+    component [Reducer] as RED #FFF3E0
+    component [Actions] as ACT #FFF3E0
+}
+
+package "🔍 Backend Service API" {
+    component [MonitorAPI] as API #E8F5E9
+    component [RiskEngine] as RISK #E8F5E9
+    component [ProcessScanner] as SCAN #E8F5E9
+}
+
+package "💾 Data Models" {
+    component [MonitoredProcess] as M1 #F3E5F5
+    component [AlertEvent] as M2 #F3E5F5
+    component [RiskSignal] as M3 #F3E5F5
+}
+
+MAIN --> DASH
+MAIN --> STORE
+DASH --> V1
+DASH --> V2
+DASH --> V3
+DASH --> V4
+DASH --> V5
+
+V1 --> C1
+V2 --> C4
+V3 --> C5
+V4 --> C5
+
+C1 --> STORE
+C2 --> STORE
+C3 --> STORE
+
+STORE --> STATE
+STORE --> RED
+RED --> ACT
+
+ACT --> API
+API --> RISK
+API --> SCAN
+
+STATE --> M1
+STATE --> M2
+STATE --> M3
+
+@enduml

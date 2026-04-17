@@ -1,0 +1,154 @@
+@startuml KTM_React_States
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam state {
+    BackgroundColor #E3F2FD
+    BorderColor #1976D2
+    FontColor #000000
+}
+skinparam note {
+    BackgroundColor #FFF9C4
+    BorderColor #F57C00
+    FontColor #000000
+}
+
+title Keyboard Transparency Monitor - React Application States\n\n
+
+state "APP STATES" as APP_STATES {
+    state STARTUP #FFE0B2
+    state NORMAL #E3F2FD
+    state PARANOIA #E1F5FE
+    state SENSITIVE #FCE4EC
+    state AUTOBLOCK #C8E6C9
+    
+    note right of STARTUP
+        Initial load
+        Check permissions
+        Initialize store
+    end note
+    
+    note right of NORMAL
+        Standard monitoring
+        Normal risk thresholds
+        Manual user decisions
+    end note
+    
+    note right of PARANOIA
+        Enhanced detection
+        Lower thresholds
+        More alerts
+    end note
+    
+    note right of SENSITIVE
+        Sensitive context mode
+        High sensitivity
+        Frequent updates
+    end note
+    
+    note right of AUTOBLOCK
+        Automatic blocking
+        No user confirmation
+        Critical only
+    end note
+    
+    STARTUP --> NORMAL : boot complete
+    NORMAL --> PARANOIA : user enables
+    PARANOIA --> NORMAL : user disables
+    NORMAL --> SENSITIVE : context switch
+    SENSITIVE --> NORMAL : exit context
+    NORMAL --> AUTOBLOCK : user enables
+    AUTOBLOCK --> NORMAL : user disables
+}
+
+state "PROCESS STATES" as PROC_STATES {
+    state UNKNOWN #CFD8DC
+    state EVALUATING #B3E5FC
+    state TRUSTED #C8E6C9
+    state BLOCKED #FFCDD2
+    state RELAUNCH #FF7043
+    
+    note right of UNKNOWN
+        New process detected
+        Awaiting analysis
+        No user action yet
+    end note
+    
+    note right of EVALUATING
+        Risk analysis running
+        Calculating signals
+        Determining level
+    end note
+    
+    note right of TRUSTED
+        User marked safe
+        Won't trigger alerts
+        In whitelist
+    end note
+    
+    note right of BLOCKED
+        In blocklist
+        Relaunch tracking ON
+        Any restart = alert
+    end note
+    
+    note right of RELAUNCH
+        Blocked proc restarted!
+        CRITICAL alert
+        Risk = 100%
+    end note
+    
+    UNKNOWN --> EVALUATING : begin analysis
+    EVALUATING --> TRUSTED : low risk or user trusts
+    EVALUATING --> UNKNOWN : inconclusive
+    UNKNOWN --> BLOCKED : user blocks
+    BLOCKED --> RELAUNCH : process restarts
+    RELAUNCH --> BLOCKED : re-block
+}
+
+state "SCANNING STATES" as SCAN_STATES {
+    state IDLE #F5F5F5
+    state SCANNING #81C784
+    state PAUSED #FFA726
+    state ERROR #E57373
+    
+    IDLE --> SCANNING : user clicks START
+    SCANNING --> PAUSED : user clicks PAUSE
+    PAUSED --> SCANNING : user clicks RESUME
+    SCANNING --> IDLE : user clicks STOP
+    SCANNING --> ERROR : api error
+    ERROR --> IDLE : user stops
+}
+
+state "ALERT STATES" as ALERT_STATES {
+    state QUIET #E0E0E0
+    state NEW_ALERT #FFC107
+    state ACTIVE #E91E63
+    state OVERLOAD #F44336
+    
+    note right of QUIET
+        No alerts
+        Safe state
+    end note
+    
+    note right of NEW_ALERT
+        New detection
+        Awaiting action
+    end note
+    
+    note right of ACTIVE
+        Active alerts
+        Normal level
+    end note
+    
+    note right of OVERLOAD
+        Too many alerts
+        User should review
+    end note
+    
+    QUIET --> NEW_ALERT : detection >= 70%
+    NEW_ALERT --> ACTIVE : user acknowledges
+    ACTIVE --> OVERLOAD : alert count > threshold
+    OVERLOAD --> ACTIVE : user dismisses some
+}
+
+@enduml

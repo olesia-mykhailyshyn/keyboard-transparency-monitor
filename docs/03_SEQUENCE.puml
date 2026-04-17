@@ -1,0 +1,125 @@
+@startuml KTM_Sequence_Scanning
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam sequence {
+    ArrowColor #0066CC
+    LifeLineBackgroundColor #E8F4FF
+    LifeLineBorderColor #0066CC
+    ActorBackgroundColor #E8FFE8
+    ActorBorderColor #00AA00
+    ParticipantBackgroundColor #FFE8E8
+    ParticipantBorderColor #CC0000
+}
+skinparam note {
+    BackgroundColor #FFFFCC
+    BorderColor #FF6600
+    FontColor #000000
+}
+
+title Keyboard Transparency Monitor - Scanning Process Flow\n\n
+
+actor User
+participant "UI\n(CyberpunkMainWindow)" as UI #E8F4FF
+participant "MonitorService\n(Background Thread)" as MONITOR #FFE8E8
+participant "ProcessScanner\n(WMIC/psutil)" as SCANNER #E8FFE8
+participant "RiskEngine\n(Analysis)" as RISK #E8FFE8
+participant "PlatformAdapter\n(Windows/Linux)" as PLATFORM #F0E8FF
+participant "Services\n(Blocklist/Trust)" as SERVICES #FFE8F0
+participant "Database\n(SQLite)" as DB #FFF8E8
+
+User -> UI: Click "START SCAN"
+activate UI
+
+UI -> MONITOR: monitor.start()
+activate MONITOR
+note right of MONITOR
+    Background thread spawned
+    Scan interval: 5 seconds
+end note
+
+MONITOR -> MONITOR: _monitor_loop()
+loop Every 5 seconds
+    MONITOR -> SCANNER: scan_all_processes()
+    activate SCANNER
+    note right of SCANNER
+        Enumerate all running processes
+        Collect metadata (PID, name, path, etc)
+    end note
+    
+    SCANNER -> PLATFORM: get_process_handles()
+    activate PLATFORM
+    note right of PLATFORM
+        Windows: WMIC query
+        Linux: /proc parsing
+        Analyze handle counts
+    end note
+    PLATFORM --> SCANNER: ProcessMetadata[]
+    deactivate PLATFORM
+    
+    SCANNER --> MONITOR: processes[]
+    deactivate SCANNER
+    
+    loop For each process
+        MONITOR -> SERVICES: is_trusted(process)?
+        activate SERVICES
+        SERVICES -> DB: query whitelist
+        SERVICES --> MONITOR: true/false
+        deactivate SERVICES
+        
+        alt Not Trusted
+            MONITOR -> RISK: analyze(process)
+            activate RISK
+            note right of RISK
+                Calculate 10 risk signals:
+                • Input device access (25%)
+                • Relaunch attempt (30%)
+                • Suspicious path (15%)
+                • Unsigned (12%)
+                • Newly started (12%)
+                • etc...
+            end note
+            
+            RISK -> PLATFORM: check_keyboard_access()
+            activate PLATFORM
+            PLATFORM --> RISK: [indicators]
+            deactivate PLATFORM
+            
+            RISK -> RISK: calculate_risk_score()
+            
+            RISK --> MONITOR: RiskAssessment(score=0-100)
+            deactivate RISK
+            
+            MONITOR -> UI: emit process_detected()
+            activate UI
+            note right of UI
+                Qt Signal
+                (thread-safe callback)
+            end note
+            
+            UI -> UI: _on_process_detected_safe()
+            UI -> UI: add_process_to_table()
+            
+            alt risk_score >= 70
+                UI -> UI: add_alert_to_timeline()
+                UI -> DB: save_alert()
+            end
+            
+            deactivate UI
+            
+            alt risk_score >= 85 or relaunch
+                MONITOR -> SERVICES: log_detection()
+                activate SERVICES
+                SERVICES -> DB: save_detection_record()
+                deactivate SERVICES
+            end
+        end
+    end
+    
+    note right of MONITOR
+        Scan complete
+        Sleep 5 seconds
+        Then repeat...
+    end note
+end
+
+@enduml

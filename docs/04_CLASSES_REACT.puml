@@ -1,0 +1,139 @@
+@startuml KTM_React_Classes
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam classBackgroundColor #E3F2FD
+skinparam classBorderColor #1976D2
+skinparam arrowColor #1976D2
+
+title Keyboard Transparency Monitor - React Data Models\n\n
+
+package "📊 Core Models" {
+    class MonitoredProcess {
+        -id: string
+        -name: string
+        -pid: number
+        -path: string
+        -cmd: string
+        -created: DateTime
+        -memory: number
+        -cpu: number
+        --
+        +getHash(): string
+        +isSystemProcess(): boolean
+    }
+    
+    class AlertEvent {
+        -id: string
+        -ts: DateTime
+        -level: AlertLevel
+        -category: AlertCategory
+        -text: string
+        -processId: string
+        --
+        +serialize(): string
+        +getIcon(): string
+    }
+    
+    class RiskAssessment {
+        -pid: number
+        -score: float (0-100)
+        -level: RiskLevel
+        -signals: Signal[]
+        -keywords: string[]
+        -confidence: float
+        --
+        +getDescription(): string
+        +getRecommendation(): string
+    }
+    
+    enum RiskLevel {
+        LOW
+        MEDIUM
+        HIGH
+        CRITICAL
+    }
+    
+    enum AlertLevel {
+        INFO
+        WARNING
+        CRITICAL
+    }
+    
+    enum AlertCategory {
+        KEYBOARD_ACCESS
+        SUSPICIOUS_PATH
+        RELAUNCH_ATTEMPT
+        PERMISSION_ESCALATION
+    }
+    
+    RiskAssessment --> RiskLevel
+    AlertEvent --> AlertLevel
+    AlertEvent --> AlertCategory
+}
+
+package "⚛️ State & Store (Zustand)" {
+    class AppState {
+        +appState: "startup"|"normal"|"paranoia"|"sensitive"
+        +monitoredProcesses: MonitoredProcess[]
+        +alertLevel: AlertLevel[]
+        +monitoredProcessesFiltered: MonitoredProcess[]
+        +number: systemScore
+        +boolean: scanning
+        +string: searchKey
+        +ProcessFilter: filter
+        +boolean: alertOverload
+        --
+        +dispatch(action): AppState
+        +now(): string
+    }
+    
+    class Store {
+        -state: AppState
+        -listeners: Set
+        --
+        +getState(): AppState
+        +setState(action): void
+        +subscribe(listener): unsubscribe
+        +reducer(state, action): AppState
+    }
+    
+    class Actions {
+        +dispatch(type, payload): void
+        +SCAN_START(): void
+        +SCAN_STOP(): void
+        +PROCESS_DETECTED(process, risk): void
+        +ALERT_GENERATED(alert): void
+        +PROCESS_BLOCKED(processId): void
+        +PROCESS_TRUSTED(processId): void
+    }
+    
+    AppState --> MonitoredProcess
+    AppState --> AlertEvent
+    AppState --> RiskAssessment
+    Store --> AppState
+    Store --> Actions
+}
+
+package "🎨 Component Props" {
+    class ProcessListProps {
+        -processes: MonitoredProcess[]
+        -onProcessSelect: (pid) => void
+        -onBlock: (process) => void
+        -onTrust: (process) => void
+    }
+    
+    class StatusCardProps {
+        -label: string
+        -value: number
+        -icon: string
+        -color: string
+    }
+    
+    class RiskBadgeProps {
+        -level: RiskLevel
+        -score: number
+        -size: "sm"|"md"|"lg"
+    }
+}
+
+@enduml

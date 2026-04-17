@@ -1,0 +1,158 @@
+@startuml KTM_Deployment
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam artifact {
+    BackgroundColor #E8F4FF
+    BorderColor #0066CC
+    FontColor #000000
+}
+skinparam node {
+    BackgroundColor #E8FFE8
+    BorderColor #00AA00
+    FontColor #000000
+}
+skinparam database {
+    BackgroundColor #FFF8E8
+    BorderColor #FF9900
+    FontColor #000000
+}
+skinparam note {
+    BackgroundColor #FFFFCC
+    BorderColor #FF6600
+    FontColor #000000
+}
+
+title Keyboard Transparency Monitor - Deployment Architecture\n\n
+
+' Physical devices
+node "🖥️ Windows Machine" as WIN_MACHINE {
+    artifact "Python 3.8+" as PYTHON
+    artifact "PySide6 (Qt6)" as PYSIDE
+    artifact "psutil" as PSUTIL
+    artifact "pywin32" as PYWIN32
+    
+    note right of PYTHON
+        Runtime environment
+        (Interpreter + libraries)
+    end note
+}
+
+node "🐧 Linux Machine" as LINUX_MACHINE {
+    artifact "Python 3.8+" as PYTHON_LNX
+    artifact "PySide6 (Qt6)" as PYSIDE_LNX
+    artifact "psutil" as PSUTIL_LNX
+    
+    note right of PYTHON_LNX
+        Same application
+        Different platform adapter
+    end note
+}
+
+node "🍎 macOS Machine" as MAC_MACHINE {
+    artifact "Python 3.8+" as PYTHON_MAC
+    artifact "PySide6 (Qt6)" as PYSIDE_MAC
+    artifact "psutil" as PSUTIL_MAC
+    
+    note right of PYTHON_MAC
+        Same application
+        macOS-specific detection
+    end note
+}
+
+' Application package
+artifact "🎯 KTM Application Package" as APP_PKG {
+    artifact "src/core/" as CORE
+    artifact "src/ui/" as UI
+    artifact "src/platform/" as PLATFORM
+    artifact "src/storage/" as STORAGE
+    artifact "requirements.txt" as REQUIREMENTS
+    artifact "app.py" as APP_MAIN
+    
+    note right of CORE
+        MonitorService
+        RiskEngine
+        ProcessScanner
+        Services (Alert, Block, Trust)
+    end note
+    
+    note right of PLATFORM
+        PlatformAdapter
+        WindowsAdapter
+        LinuxAdapter
+        MacAdapter
+    end note
+}
+
+' Data storage
+database "📂 Local Storage" as LOCAL_STORAGE {
+    artifact "SQLite DB\n(~5MB)" as SQLITE_DB
+    artifact "Config Files\n(~50KB)" as CONFIG
+    artifact "Logs\n(~100KB)" as LOGS
+    
+    note right of SQLITE_DB
+        Location: ~/.ktm/ktm.db
+        8 tables: processes, detections,
+        alerts, blocklist, whitelist, etc.
+    end note
+}
+
+' System integration
+artifact "🔧 System APIs" as SYS_API {
+    artifact "Windows WMIC" as WMIC
+    artifact "Windows Registry" as REGISTRY
+    artifact "Linux /proc" as PROC
+    artifact "macOS IOKit" as IOKIT
+}
+
+' User interaction
+actor "👤 User" as USER
+
+' Deployment relationships
+USER --> WIN_MACHINE : runs on\nWindows
+USER --> LINUX_MACHINE : runs on\nLinux
+USER --> MAC_MACHINE : runs on\nmacOS
+
+APP_PKG ..> CORE : contains
+APP_PKG ..> UI : contains
+APP_PKG ..> PLATFORM : contains
+APP_PKG ..> STORAGE : contains
+
+CORE --> PSUTIL : uses
+CORE --> PYWIN32 : uses (Windows)
+CORE --> SYS_API : queries
+UI --> PYSIDE : uses
+STORAGE --> SQLITE_DB : reads/writes
+
+WIN_MACHINE --> APP_PKG : runs
+LINUX_MACHINE --> APP_PKG : runs (adapted)
+MAC_MACHINE --> APP_PKG : runs (adapted)
+
+WIN_MACHINE --> LOCAL_STORAGE : stores
+LINUX_MACHINE --> LOCAL_STORAGE : stores
+MAC_MACHINE --> LOCAL_STORAGE : stores
+
+note bottom of WIN_MACHINE
+    Primary target platform
+    Full feature support
+    WMIC/Registry/Signature validation
+end note
+
+note bottom of LINUX_MACHINE
+    Secondary platform
+    /proc-based detection
+    Limited handle analysis
+end note
+
+note bottom of MAC_MACHINE
+    Tertiary platform
+    IOKit inspection
+    Sandbox restrictions apply
+end note
+
+note right of LOCAL_STORAGE
+    All data stored locally
+    No cloud sync
+    Privacy-focused
+    User owns all data
+end note
+

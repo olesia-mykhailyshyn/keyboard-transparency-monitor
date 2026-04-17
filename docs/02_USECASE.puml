@@ -1,0 +1,95 @@
+@startuml KTM_UseCase
+!theme plain
+skinparam backgroundColor #FFFFFF
+skinparam actorStyle awesome
+skinparam actor {
+    BackgroundColor #E8F4FF
+    BorderColor #0066CC
+}
+skinparam usecase {
+    BackgroundColor #E8FFE8
+    BorderColor #00AA00
+    FontColor #000000
+}
+skinparam note {
+    BackgroundColor #FFFFCC
+    BorderColor #FF6600
+    FontColor #000000
+}
+
+title Keyboard Transparency Monitor - Use Case Diagram\n\n
+
+actor User as USER #E8F4FF
+actor Administrator as ADMIN #FFE8E8
+actor System as SYSTEM #E8FFE8
+
+rectangle "🎯 Keyboard Transparency Monitor" {
+    usecase "Start Monitoring" as UC1 #E8FFE8
+    usecase "View Running Processes" as UC2 #E8FFE8
+    usecase "Analyze Process Risk" as UC3 #FFE8F0
+    usecase "Block Suspicious Process" as UC4 #FFE8E8
+    usecase "Mark as Trusted" as UC5 #E8FFE8
+    usecase "View Alerts Timeline" as UC6 #FFE8E8
+    usecase "Export Detection Report" as UC7 #E8F4FF
+    usecase "Configure Scan Interval" as UC8 #F0E8FF
+    usecase "View Process Details" as UC9 #E8FFE8
+    usecase "Receive Real-time Alerts" as UC10 #FFE8F0
+    usecase "Track Relaunch Attempts" as UC11 #FFE8E8
+    usecase "View Statistics" as UC12 #E8F4FF
+    usecase "Manage Whitelist" as UC13 #F0E8FF
+    usecase "Manage Blacklist" as UC14 #F0E8FF
+    usecase "Enable Demo Mode" as UC15 #FFF8E8
+    usecase "View Privacy Guarantee" as UC16 #F0E8FF
+}
+
+' User interactions
+USER --> UC1 : initiates
+USER --> UC2 : views
+USER --> UC8 : configures
+USER --> UC9 : examines
+USER --> UC5 : marks safe
+USER --> UC4 : terminates
+USER --> UC6 : reviews
+USER --> UC12 : checks
+USER --> UC16 : reads
+
+' Admin interactions
+ADMIN --> UC13 : manages
+ADMIN --> UC14 : manages
+ADMIN --> UC15 : runs
+
+' System interactions
+SYSTEM --> UC3 : performs
+SYSTEM --> UC10 : generates
+SYSTEM --> UC11 : detects
+SYSTEM --> UC7 : exports
+
+' Include relationships
+UC1 -.-> UC2 : includes
+UC2 -.-> UC3 : includes
+UC3 -.-> UC9 : includes
+UC3 -.-> UC10 : triggers
+
+' Precedence relationships
+UC4 -.-> UC11 : precedes
+UC5 -.-> UC13 : updates
+UC4 -.-> UC14 : updates
+UC6 -.-> UC10 : displays
+UC1 -.-> UC8 : extends
+
+note right of UC1
+    Start background
+    monitoring service
+end note
+
+note right of UC3
+    10-signal risk
+    scoring engine
+end note
+
+note right of UC4
+    Add to blocklist
+    and track relaunch
+end note
+
+@enduml
